@@ -4,6 +4,7 @@ import { Heart, Truck, Shield, RotateCcw, Minus, Plus, ShoppingBag, Star, Chevro
 import gsap from 'gsap';
 import { useCart } from './CartContext.jsx';
 import { fetchProductDetail, fetchProducts } from '../api';
+import { useCurrency } from '../context/CurrencyContext';
 
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const colors = [
@@ -18,6 +19,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, wishlistItems, toggleWishlist } = useCart();
+  const { convertPrice } = useCurrency();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedSize, setSelectedSize] = useState('M');
@@ -106,6 +108,11 @@ const ProductDetail = () => {
                     {product.badge}
                   </div>
                 )}
+                {product.discount_percent > 0 && (
+                  <div className="bg-[#ff3333] text-white text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-full shadow-xl">
+                    {product.discount_percent}% OFF
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => toggleWishlist(product)}
@@ -145,8 +152,10 @@ const ProductDetail = () => {
                 {product.name}
               </h1>
               <div className="flex items-baseline gap-4">
-                <span className="text-3xl font-bold text-gold">{product.price}</span>
-                <span className="text-gray-400 line-through text-base">PKR 6,500</span>
+                <span className="text-3xl font-bold text-gold">{convertPrice(product.price)}</span>
+                {product.old_price && (
+                  <span className="text-gray-400 line-through text-base">{convertPrice(product.old_price)}</span>
+                )}
               </div>
 
               {/* Product IDs */}
@@ -367,7 +376,7 @@ const ProductDetail = () => {
                 <div className="space-y-1">
                   <p className="text-[9px] text-gold uppercase tracking-widest font-bold">{item.category}</p>
                   <h3 className="font-bold group-hover:text-gold transition-colors line-clamp-1">{item.name}</h3>
-                  <p className="text-charcoal font-bold">{item.price}</p>
+                  <p className="text-charcoal font-bold">{convertPrice(item.price)}</p>
                 </div>
               </div>
             ))}

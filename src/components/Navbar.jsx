@@ -3,14 +3,18 @@ import { ShoppingBag, Menu, X, Search, Heart, User, Globe } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useCart } from '../pages/CartContext';
+import { fetchCategories } from '../api';
+import { useCurrency, currencies } from '../context/CurrencyContext';
 
 const Navbar = () => {
   const { cartItems, wishlistItems } = useCart();
+  const { currency, setCurrency } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
+  const [categories, setCategories] = useState([]);
   const closeTimeout = useRef(null);
   
   const navigate = useNavigate();
@@ -25,6 +29,17 @@ const Navbar = () => {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
+    
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setCategories(data.filter(cat => cat.is_published));
+      } catch (err) {
+        console.error("Error fetching categories for navbar:", err);
+      }
+    };
+    loadCategories();
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (closeTimeout.current) clearTimeout(closeTimeout.current);
@@ -52,7 +67,7 @@ const Navbar = () => {
     if (closeTimeout.current) clearTimeout(closeTimeout.current);
     closeTimeout.current = setTimeout(() => {
       setActiveMenu(null);
-    }, 2000); // 2 seconds persistence
+    }, 200); 
   };
 
   return (
@@ -94,27 +109,28 @@ const Navbar = () => {
                     <div className="grid grid-cols-3 gap-12 w-2/3 pr-12">
                       <div className="space-y-8">
                         <div className="space-y-4">
-                          <h4 className="text-[10px] font-extrabold tracking-widest text-charcoal uppercase">READY TO STITCH</h4>
+                          <h4 className="text-[10px] font-extrabold tracking-widest text-charcoal uppercase">Collections</h4>
                           <ul className="space-y-3">
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">SPRING SUMMER'26 <span className="text-pink-400">🌸</span></a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">BASICS</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">ESSENTIALS</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">SIGNATURE</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">CAPSULE</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">LUXE</a></li>
+                            {categories.map((cat) => (
+                              <li key={cat.id}>
+                                <Link 
+                                  to={`/products?category=${encodeURIComponent(cat.name)}`} 
+                                  className="text-[11px] text-gray-500 hover:text-gold font-medium uppercase"
+                                >
+                                  {cat.name}
+                                </Link>
+                              </li>
+                            ))}
                           </ul>
                         </div>
                       </div>
                       <div className="space-y-8">
                         <div className="space-y-4">
-                          <h4 className="text-[10px] font-extrabold tracking-widest text-charcoal uppercase">READY TO WEAR</h4>
+                          <h4 className="text-[10px] font-extrabold tracking-widest text-charcoal uppercase">Shop By Badge</h4>
                           <ul className="space-y-3">
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">BASICS</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">ESSENTIALS</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">SIGNATURE</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">LUXE</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">FUSION</a></li>
-                            <li><a href="#" className="text-[11px] text-gray-500 hover:text-gold font-medium">MODEST</a></li>
+                            <li><Link to="/products?badge=New" className="text-[11px] text-gray-500 hover:text-gold font-medium uppercase">New Arrivals</Link></li>
+                            <li><Link to="/products?badge=Best Seller" className="text-[11px] text-gray-500 hover:text-gold font-medium uppercase">Best Sellers</Link></li>
+                            <li><Link to="/products?badge=Luxe" className="text-[11px] text-gray-500 hover:text-gold font-medium uppercase">Luxe Edition</Link></li>
                           </ul>
                         </div>
                       </div>
@@ -158,7 +174,7 @@ const Navbar = () => {
                 onMouseEnter={() => handleMenuEnter('pages')}
                 onMouseLeave={handleMenuLeave}
               >
-                <a href="/products?category=home" className={`${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} hover:text-gold transition-colors duration-300 uppercase text-xs font-bold tracking-[0.2em] text-[12px]`}>
+                <a href="#" className={`${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} hover:text-gold transition-colors duration-300 uppercase text-xs font-bold tracking-[0.2em] text-[12px]`}>
                   Pages
                 </a>
                 <div className={`absolute left-0 w-full bg-white border-t border-gray-100 shadow-xl transition-all duration-300 top-full mt-[-1px] ${activeMenu === 'pages' ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'}`}>
@@ -282,12 +298,22 @@ const Navbar = () => {
               onMouseLeave={handleMenuLeave}
             >
               <Globe size={18} className={`${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} ${activeMenu === 'country' ? 'text-gold' : ''} transition-colors`} />
-              <span className={`ml-1 text-[10px] font-bold ${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} ${activeMenu === 'country' ? 'text-gold' : ''} uppercase transition-colors`}>PK</span>
+              <span className={`ml-1 text-[10px] font-bold ${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} ${activeMenu === 'country' ? 'text-gold' : ''} uppercase transition-colors`}>
+                {currency.countryCode}
+              </span>
               <div className={`absolute top-full right-0 bg-white shadow-xl border border-gray-100 transition-all min-w-[200px] ${activeMenu === 'country' ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-                <div className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 text-[11px] uppercase tracking-widest font-bold cursor-pointer text-charcoal">Pakistan (PKR)</div>
-                <div className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 text-[11px] uppercase tracking-widest font-bold cursor-pointer text-charcoal">United Arab Emirates (AED)</div>
-                <div className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 text-[11px] uppercase tracking-widest font-bold cursor-pointer text-charcoal">United States (USD)</div>
-                <div className="px-4 py-3 hover:bg-gray-50 text-[11px] uppercase tracking-widest font-bold cursor-pointer text-charcoal">United Kingdom (GBP)</div>
+                {currencies.map((curr) => (
+                  <div 
+                    key={curr.code}
+                    onClick={() => {
+                      setCurrency(curr);
+                      setActiveMenu(null);
+                    }}
+                    className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 text-[11px] uppercase tracking-widest font-bold cursor-pointer transition-colors ${currency.code === curr.code ? 'text-gold bg-gold/5' : 'text-charcoal'}`}
+                  >
+                    {curr.label}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -295,7 +321,7 @@ const Navbar = () => {
               <User size={20} />
             </a>
             
-            <Link to="/wishlist" className={`hidden md:block relative ${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} hover:text-gold transition-colors`}>
+            <Link to="/wishlist" className={`relative ${scrolled || isDarkHeroPage ? 'text-white' : 'text-charcoal'} hover:text-gold transition-colors`}>
               <Heart size={20} />
               {wishlistItems.length > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-gold text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-fade-in">
@@ -325,15 +351,23 @@ const Navbar = () => {
       {/* Mobile Menu - Full Screen Overlay */}
       <div className={`md:hidden fixed inset-0 bg-black z-40 transition-all duration-300 ${isOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'}`} style={{ top: scrolled ? '56px' : '80px' }}>
         <div className="px-6 py-8 space-y-6 h-full overflow-y-auto bg-black text-white">
-          <a href="/" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Home</a>
-          <a href="/products" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">New Arrivals</a>
-          <a href="/category/unstitched" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Unstitched</a>
-          <a href="/category/ready-to-wear" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Ready to Wear</a>
-          <a href="/category/luxe-edition" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Luxe Edition</a>
-          <a href="/category/accessories" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Accessories</a>
-          <a href="/about" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">About Us</a>
-          <a href="/contact" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Contact</a>
-          <a href="/products" onClick={() => setIsOpen(false)} className="block text-[#FEBE59] hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Sale</a>
+          <Link to="/" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Home</Link>
+          <Link to="/products?badge=New" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">New Arrivals</Link>
+          
+          {categories.map((cat) => (
+            <Link 
+              key={cat.id}
+              to={`/products?category=${encodeURIComponent(cat.name)}`} 
+              onClick={() => setIsOpen(false)} 
+              className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10"
+            >
+              {cat.name}
+            </Link>
+          ))}
+
+          <Link to="/about" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">About Us</Link>
+          <Link to="/contact" onClick={() => setIsOpen(false)} className="block text-white hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Contact</Link>
+          <Link to="/products?sale=true" onClick={() => setIsOpen(false)} className="block text-[#FEBE59] hover:text-gold uppercase text-sm font-semibold tracking-widest py-2 border-b border-white/10">Sale</Link>
           
           {/* Mobile Menu Footer - Country, Account, Wishlist */}
           <div className="pt-6 mt-6 border-t border-white/20">

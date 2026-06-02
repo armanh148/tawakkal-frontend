@@ -5,12 +5,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Heart, ShoppingBag, Eye } from 'lucide-react';
 import { fetchProducts } from '../api';
 import { useCart } from '../pages/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const ProductGrid = ({ id, limit = null, category = 'All', sortBy = 'Featured', badge = null, gridView = '4col' }) => {
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, wishlistItems } = useCart();
+  const { convertPrice } = useCurrency();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,11 +107,18 @@ const ProductGrid = ({ id, limit = null, category = 'All', sortBy = 'Featured', 
             >
               {/* Image Container */}
               <div className="relative aspect-[3/4] overflow-hidden mb-3 sm:mb-5 bg-white rounded-lg sm:rounded-2xl shadow-sm sm:shadow-md group-hover:shadow-xl transition-all duration-500">
-                {product.badge && (
-                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 bg-gold text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg">
-                    {product.badge}
-                  </div>
-                )}
+                <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col gap-2">
+                  {product.badge && (
+                    <div className="bg-gold text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg">
+                      {product.badge}
+                    </div>
+                  )}
+                  {product.discount_percent > 0 && (
+                    <div className="bg-[#ff3333] text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shadow-lg">
+                      {product.discount_percent}% OFF
+                    </div>
+                  )}
+                </div>
 
                 <img
                   src={product.image}
@@ -148,8 +157,13 @@ const ProductGrid = ({ id, limit = null, category = 'All', sortBy = 'Featured', 
                   <div className="h-px flex-1 bg-gray-100 sm:bg-gray-200" />
                 </div>
                 <h3 className="text-xs sm:text-lg font-bold group-hover:text-gold transition-colors line-clamp-1">{product.name}</h3>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <p className="text-charcoal font-black text-sm sm:text-lg">{product.price}</p>
+                <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-charcoal font-black text-sm sm:text-lg">{convertPrice(product.price)}</p>
+                    {product.old_price && (
+                      <p className="text-gray-400 line-through text-[10px] sm:text-sm font-medium">{convertPrice(product.old_price)}</p>
+                    )}
+                  </div>
                   <div className="flex text-gold text-[8px] sm:text-sm">★★★★★</div>
                 </div>
               </div>

@@ -28,9 +28,7 @@ const Preloader = ({ onComplete }) => {
   return (
     <div className="preloader-container fixed inset-0 z-[100] bg-charcoal-dark flex items-center justify-center">
       <div className="preloader-logo opacity-0 translate-y-10 text-center">
-        <h1 className="text-4xl md:text-6xl font-bold text-white tracking-widest">
-          TA<span className="gold-gradient uppercase">WAKK</span>AL
-        </h1>
+        <img src="/tawakkal-second-logo.png" className="h-20 md:h-24 lg:h-36 w-auto object-contain"/>
         <div className="w-12 h-0.5 bg-gold mx-auto mt-4" />
       </div>
     </div>

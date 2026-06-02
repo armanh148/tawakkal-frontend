@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { fetchProducts } from '../api';
 import { useCart } from '../pages/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -14,6 +15,7 @@ import 'swiper/css/pagination';
 const ProductMarquee = ({ id, limit = 8 }) => {
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, wishlistItems } = useCart();
+  const { convertPrice } = useCurrency();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,11 +126,18 @@ const ProductMarquee = ({ id, limit = 8 }) => {
                 <div className="bg-white shadow-lg hover:shadow-2xl transition-all duration-500 h-full">
                   {/* Image Container */}
                   <div className="relative aspect-[3/4] overflow-hidden">
-                    {product.badge && (
-                      <div className="absolute top-2 left-2 md:top-3 md:left-3 z-10 bg-gold text-white text-[8px] md:text-[9px] font-bold uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5">
-                        {product.badge}
-                      </div>
-                    )}
+                    <div className="absolute top-2 left-2 md:top-3 md:left-3 z-10 flex flex-col gap-2">
+                      {product.badge && (
+                        <div className="bg-gold text-white text-[8px] md:text-[9px] font-bold uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5">
+                          {product.badge}
+                        </div>
+                      )}
+                      {product.discount_percent > 0 && (
+                        <div className="bg-[#ff3333] text-white text-[8px] md:text-[9px] font-bold uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5">
+                          {product.discount_percent}% OFF
+                        </div>
+                      )}
+                    </div>
                     
                     <button
                       onClick={(e) => handleWishlist(e, product)}
@@ -165,9 +174,18 @@ const ProductMarquee = ({ id, limit = 8 }) => {
                     <h3 className="text-sm md:text-base font-bold group-hover:text-gold transition-colors line-clamp-1">
                       {product.name}
                     </h3>
-                    <p className="text-charcoal font-bold text-xs md:text-sm tracking-wider">
-                      {product.price}
-                    </p>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-charcoal font-bold text-xs md:text-sm tracking-wider">
+                          {convertPrice(product.price)}
+                        </p>
+                        {product.old_price && (
+                          <p className="text-gray-400 line-through text-[10px] md:text-xs font-medium">
+                            {convertPrice(product.old_price)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

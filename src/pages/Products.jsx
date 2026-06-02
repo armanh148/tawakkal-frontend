@@ -2,12 +2,13 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, Grid3X3, LayoutGrid, ChevronDown } from 'lucide-react';
 import ProductGrid from '../components/ProductGrid';
+import { fetchCategories } from '../api';
 
-const categories = ['All', 'Ready to Wear', 'Unstitched', 'Embroidered', 'Luxe Edition'];
 const sortOptions = ['Featured', 'Price: Low to High', 'Price: High to Low', 'Newest'];
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [categories, setCategories] = useState(['All']);
   
   const activeCategory = searchParams.get('category') || 'All';
   const activeSort = searchParams.get('sort') || 'Featured';
@@ -16,6 +17,19 @@ const Products = () => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [gridView, setGridView] = useState('4col'); // '4col' or '3col'
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        const publishedCats = data.filter(cat => cat.is_published).map(cat => cat.name);
+        setCategories(['All', ...publishedCats]);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleCategoryChange = (cat) => {
     const newParams = new URLSearchParams(searchParams);
