@@ -90,7 +90,7 @@ const Products = () => {
       </div>
 
       {/* Filters Bar */}
-      <div className="sticky top-16 md:top-20 z-30 bg-white border-b border-gray-100 shadow-sm">
+      <div className="sticky top-14 z-30 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 md:py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
             {/* Category Filters */}

@@ -25,9 +25,11 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [quantity, setQuantity] = useState(1);
+  const [wholesaleQuantity, setWholesaleQuantity] = useState(6);
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [wholesaleAddedToCart, setWholesaleAddedToCart] = useState(false);
   
   const isWishlisted = wishlistItems.some(item => item.id === parseInt(id));
   
@@ -39,7 +41,8 @@ const ProductDetail = () => {
       try {
         const data = await fetchProductDetail(id);
         setProduct(data);
-        
+        setWholesaleQuantity(data.wholesale_package_size || 6);
+
         // Fetch related products
         const products = await fetchProducts({ category: data.category });
         setRelatedProducts(products.filter(p => p.id !== parseInt(id)).slice(0, 4));
@@ -71,6 +74,17 @@ const ProductDetail = () => {
   const handleExpressCheckout = () => {
     addToCart(product, quantity, selectedSize, selectedColor);
     navigate('/cart');
+  };
+
+  const handleWholesaleAddToCart = () => {
+    addToCart(product, wholesaleQuantity, selectedSize, selectedColor, true);
+    setWholesaleAddedToCart(true);
+    setTimeout(() => setWholesaleAddedToCart(false), 2000);
+  };
+
+  const stepWholesaleQty = (dir) => {
+    const step = product.wholesale_package_size || 6;
+    setWholesaleQuantity(prev => Math.max(step, prev + dir * step));
   };
 
   if (!product) {
@@ -156,10 +170,26 @@ const ProductDetail = () => {
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-charcoal mb-4 leading-tight">
                 {product.name}
               </h1>
-              <div className="flex items-baseline gap-4">
-                <span className="text-3xl font-bold text-gold">{convertPrice(product.price)}</span>
-                {product.old_price && (
-                  <span className="text-gray-400 line-through text-base">{convertPrice(product.old_price)}</span>
+              <div className="space-y-1.5">
+                <div className="flex items-baseline gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-0.5">Retail Price</span>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl font-bold text-gold">{convertPrice(product.price)}</span>
+                      {product.old_price && (
+                        <span className="text-gray-400 line-through text-base">{convertPrice(product.old_price)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {product.wholesale_price && (
+                  <div className="flex flex-col pt-1">
+                    <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-0.5">Wholesale Price</span>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl font-bold text-charcoal">{convertPrice(product.wholesale_price)}</span>
+                      <span className="text-[10px] text-gray-400 font-medium">/ piece</span>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -262,7 +292,55 @@ const ProductDetail = () => {
                 </button>
               </div>
               
-              <button 
+              {/* Wholesale Section */}
+              {product.wholesale_price && (
+                <div className="pt-4 border-t border-dashed border-gray-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-charcoal">Wholesale Order</span>
+                    <div className="flex-1 h-px bg-gray-100" />
+                    <span className="text-[9px] uppercase tracking-widest text-gray-400 font-medium">
+                      Min. {product.wholesale_package_size || 6} pcs · +{product.wholesale_package_size || 6} per step
+                    </span>
+                  </div>
+                  <div className="flex gap-4 h-16">
+                    <div className="flex items-center bg-gray-50 rounded-2xl px-2 border border-gray-200">
+                      <button
+                        onClick={() => stepWholesaleQty(-1)}
+                        className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-charcoal transition-colors"
+                      >
+                        <Minus size={18} />
+                      </button>
+                      <span className="w-14 text-center font-bold text-lg">{wholesaleQuantity}</span>
+                      <button
+                        onClick={() => stepWholesaleQty(1)}
+                        className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-charcoal transition-colors"
+                      >
+                        <Plus size={18} />
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleWholesaleAddToCart}
+                      className={`flex-1 rounded-2xl font-bold uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 transition-all duration-500 shadow-lg border-2 ${wholesaleAddedToCart
+                        ? 'bg-green-500 text-white border-green-500'
+                        : 'bg-charcoal text-white border-charcoal hover:bg-gold hover:border-gold'
+                      }`}
+                    >
+                      {wholesaleAddedToCart ? (
+                        <><Check size={18} /> Added</>
+                      ) : (
+                        <><ShoppingBag size={18} /> Add to Cart</>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-gray-400 text-center mt-3 tracking-wide">
+                    {wholesaleQuantity} pcs × {convertPrice(product.wholesale_price)} = <span className="font-bold text-charcoal">
+                      {convertPrice(String(parseFloat(product.wholesale_price.replace(/[^0-9.]/g, '')) * wholesaleQuantity))}
+                    </span>
+                  </p>
+                </div>
+              )}
+
+              <button
                 onClick={handleExpressCheckout}
                 className="w-full h-16 rounded-2xl border-2 border-charcoal font-bold uppercase tracking-[0.2em] text-[11px] hover:bg-charcoal hover:text-white transition-all duration-300"
               >

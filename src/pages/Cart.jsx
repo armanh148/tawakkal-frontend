@@ -52,15 +52,15 @@ const Cart = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => addToCart(item, -1, item.selectedSize, item.selectedColor)}
-                        disabled={item.quantity <= 1}
+                        onClick={() => addToCart(item, -(item.isWholesale ? (item.wholesale_package_size || 6) : 1), item.selectedSize, item.selectedColor, item.isWholesale)}
+                        disabled={item.quantity <= (item.isWholesale ? (item.wholesale_package_size || 6) : 1)}
                         className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50"
                       >
                         <Minus size={16} />
                       </button>
                       <span className="font-bold text-lg">{item.quantity}</span>
                       <button
-                        onClick={() => addToCart(item, 1, item.selectedSize, item.selectedColor)}
+                        onClick={() => addToCart(item, item.isWholesale ? (item.wholesale_package_size || 6) : 1, item.selectedSize, item.selectedColor, item.isWholesale)}
                         className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                       >
                         <Plus size={16} />

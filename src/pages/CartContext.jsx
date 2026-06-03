@@ -74,9 +74,11 @@ export const CartProvider = ({ children }) => {
             showNotification(`${product.name} ${isWholesale ? '(Wholesale)' : ''} added to bag!`);
 
             if (existingItemIndex > -1) {
-                const updatedItems = [...prevItems];
-                updatedItems[existingItemIndex].quantity += (quantity || 1);
-                return updatedItems;
+                return prevItems.map((item, i) =>
+                    i === existingItemIndex
+                        ? { ...item, quantity: item.quantity + (quantity || 1) }
+                        : item
+                );
             } else {
                 const itemPrice = isWholesale ? product.wholesale_price : product.price;
                 return [...prevItems, { 
