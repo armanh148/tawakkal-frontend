@@ -60,6 +60,11 @@ export const fetchHeroBanners = async () => {
   return response.data;
 };
 
+export const fetchTikTokReels = async () => {
+  const response = await api.get('/tiktok-reels/');
+  return response.data;
+};
+
 export const fetchSiteSettings = async () => {
   const response = await api.get('/site-settings/');
   return response.data[0]; // Always take the first one

@@ -1,82 +1,88 @@
+import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import { fetchTikTokReels } from '../api';
 
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-const reelsData = [
+const staticReelsData = [
   {
     id: 1,
-    videoImg: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&q=80&w=100',
-    category: 'RTW',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 12,990',
+    videoImg: '/unstitched.jpg',
+    thumbImg: '/unstitched.jpg',
+    category: 'UNSTITCHED',
+    title: 'TRADITIONAL EMBROIDERY',
+    price: 'PKR 6,990',
+    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
   },
   {
     id: 2,
-    videoImg: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=100',
+    videoImg: '/ready to wear.webp',
+    thumbImg: '/ready to wear.webp',
     category: 'RTW',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 9,690',
+    title: 'CASUAL KURTA',
+    price: 'PKR 4,590',
+    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
   },
   {
     id: 3,
-    videoImg: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=100',
-    category: 'RTS',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 6,792',
-    oldPrice: 'PKR 8,490'
+    videoImg: '/Luxe edition.webp',
+    thumbImg: '/Luxe edition.webp',
+    category: 'LUXE',
+    title: 'FESTIVE COLLECTION',
+    price: 'PKR 15,990',
+    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
   },
   {
     id: 4,
-    videoImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=100',
-    category: 'RTS',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 6,792',
-    oldPrice: 'PKR 8,490'
+    videoImg: '/spring-summer-1.png',
+    thumbImg: '/spring-summer-1.png',
+    category: 'SS26',
+    title: 'FLORAL PRINT',
+    price: 'PKR 5,490',
+    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
   },
   {
     id: 5,
-    videoImg: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=100',
-    category: 'RTS',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 9,990',
-  },
-  {
-    id: 6,
-    videoImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=100',
-    category: 'RTW',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 8,990',
-  },
-  {
-    id: 7,
-    videoImg: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=100',
-    category: 'RTW',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 7,990',
-  },
-  {
-    id: 8,
-    videoImg: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&q=80&w=600',
-    thumbImg: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?auto=format&fit=crop&q=80&w=100',
-    category: 'RTS',
-    title: 'SHIRT, TROUSER',
-    price: 'PKR 5,990',
-    oldPrice: 'PKR 7,990'
+    videoImg: '/spring-summer-2.png',
+    thumbImg: '/spring-summer-2.png',
+    category: 'SS26',
+    title: 'PASTEL ELEGANCE',
+    price: 'PKR 5,890',
+    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
   }
 ];
 
 const ReelsGallery = () => {
+  const [reels, setReels] = useState(staticReelsData);
+
+  useEffect(() => {
+    const loadReels = async () => {
+      try {
+        const dynamicReels = await fetchTikTokReels();
+        if (dynamicReels && dynamicReels.length > 0) {
+          // Map backend data to frontend format
+          const formattedReels = dynamicReels.map(reel => ({
+            id: reel.id,
+            videoImg: reel.cover_image_url,
+            thumbImg: reel.cover_image_url,
+            category: reel.category || 'REEL',
+            title: reel.title || 'LATEST COLLECTION',
+            price: reel.price || '',
+            tiktokUrl: reel.video_url
+          }));
+          setReels(formattedReels);
+        }
+      } catch (error) {
+        console.error('Error fetching TikTok reels:', error);
+      }
+    };
+    loadReels();
+  }, []);
+
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="max-w-[95%] mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
@@ -84,8 +90,9 @@ const ReelsGallery = () => {
         {/* Section Title */}
         <div className="text-center mb-10 md:mb-16">
           <h2 className="text-lg md:text-xl lg:text-2xl font-semibold tracking-[0.2em] text-charcoal uppercase">
-            WATCH. CLICK. OWN
+            TRADITION IN MOTION
           </h2>
+          <p className="text-xs text-charcoal/60 mt-2 tracking-widest uppercase font-light italic">Follow us on TikTok @tawakkalstudio</p>
         </div>
 
         {/* Reels Slider */}
@@ -123,9 +130,9 @@ const ReelsGallery = () => {
           }}
           className="reels-slider"
         >
-          {reelsData.map((reel) => (
+          {reels.map((reel) => (
             <SwiperSlide key={reel.id}>
-              <div className="relative aspect-[9/16] rounded-lg md:rounded-xl overflow-hidden group cursor-pointer">
+              <a href={reel.tiktokUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-[9/16] rounded-lg md:rounded-xl overflow-hidden group cursor-pointer">
                 {/* Background Video/Image */}
                 <img 
                   src={reel.videoImg} 
@@ -162,7 +169,7 @@ const ReelsGallery = () => {
                   </div>
 
                 </div>
-              </div>
+              </a>
             </SwiperSlide>
           ))}
         </Swiper>

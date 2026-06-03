@@ -68,6 +68,11 @@ const ProductDetail = () => {
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
+  const handleExpressCheckout = () => {
+    addToCart(product, quantity, selectedSize, selectedColor);
+    navigate('/cart');
+  };
+
   if (!product) {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center">
@@ -257,7 +262,10 @@ const ProductDetail = () => {
                 </button>
               </div>
               
-              <button className="w-full h-16 rounded-2xl border-2 border-charcoal font-bold uppercase tracking-[0.2em] text-[11px] hover:bg-charcoal hover:text-white transition-all duration-300">
+              <button 
+                onClick={handleExpressCheckout}
+                className="w-full h-16 rounded-2xl border-2 border-charcoal font-bold uppercase tracking-[0.2em] text-[11px] hover:bg-charcoal hover:text-white transition-all duration-300"
+              >
                 Express Checkout
               </button>
             </div>

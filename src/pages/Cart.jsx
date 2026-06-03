@@ -1,13 +1,19 @@
 import { useEffect } from 'react';
 import { useCart } from "./CartContext.jsx";
+import { useNavigate } from 'react-router-dom';
 import { Trash2, Minus, Plus } from 'lucide-react';
 
 const Cart = () => {
-  const { cartItems, removeFromCart, addToCart } = useCart();
+  const { cartItems, removeFromCart, addToCart, setNotification, clearCart } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleProceedToCheckout = () => {
+    navigate('/checkout');
+  };
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
@@ -87,6 +93,7 @@ const Cart = () => {
                 <span className="font-bold text-gold">PKR {subtotal.toLocaleString()}</span>
               </div>
               <button
+                onClick={handleProceedToCheckout}
                 className="w-full bg-charcoal text-white py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-gold transition-all"
                 disabled={cartItems.length === 0}
               >

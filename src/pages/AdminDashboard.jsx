@@ -151,13 +151,22 @@ const AdminDashboard = () => {
           </div>
 
           <nav className="hidden lg:flex items-center gap-8">
-            {['Dashboard', 'Apps', 'Site Settings', 'Logs', 'Users', 'Documentation'].map(tab => {
+            {['Dashboard', 'Products', 'Settings', 'Orders', 'Staff', 'Live Website'].map(tab => {
               // Map prompt tabs to actual tabs for functionality
               let actualTab = tab;
-              if (tab === 'Apps') actualTab = 'Products';
-              if (tab === 'Site Settings') actualTab = 'Settings';
-              if (tab === 'Logs') actualTab = 'Orders';
-              if (tab === 'Users') actualTab = 'Messages';
+              if (tab === 'Settings') actualTab = 'Settings';
+              if (tab === 'Live Website') {
+                return (
+                  <a 
+                    key={tab}
+                    href="/"
+                    target="_blank"
+                    className="text-[13px] font-bold tracking-wide transition-all text-slate-400 hover:text-black"
+                  >
+                    {tab}
+                  </a>
+                )
+              }
               
               return (
                 <button 

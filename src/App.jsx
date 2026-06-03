@@ -13,6 +13,7 @@ import CategoryPage from './pages/CategoryPage';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
 import Auth from './pages/Auth';
+import Checkout from './pages/Checkout';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -68,6 +69,7 @@ function App() {
             <Route path="/feedback-survey" element={<FeedbackSurvey />} />
             <Route path="/faqs" element={<FAQs />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/auth" element={<Auth />} />
           </Routes>

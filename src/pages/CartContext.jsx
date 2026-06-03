@@ -61,23 +61,32 @@ export const CartProvider = ({ children }) => {
         });
     };
 
-    const addToCart = (product, quantity = 1, selectedSize, selectedColor) => {
+    const addToCart = (product, quantity = 1, selectedSize, selectedColor, isWholesale = false) => {
         setCartItems((prevItems) => {
             const existingItemIndex = prevItems.findIndex(
                 (item) =>
                     item.id === product.id &&
                     item.selectedSize === selectedSize &&
-                    item.selectedColor?.name === selectedColor?.name
+                    item.selectedColor?.name === selectedColor?.name &&
+                    item.isWholesale === isWholesale
             );
 
-            showNotification(`${product.name} added to bag!`);
+            showNotification(`${product.name} ${isWholesale ? '(Wholesale)' : ''} added to bag!`);
 
             if (existingItemIndex > -1) {
                 const updatedItems = [...prevItems];
                 updatedItems[existingItemIndex].quantity += (quantity || 1);
                 return updatedItems;
             } else {
-                return [...prevItems, { ...product, quantity: (quantity || 1), selectedSize, selectedColor }];
+                const itemPrice = isWholesale ? product.wholesale_price : product.price;
+                return [...prevItems, { 
+                    ...product, 
+                    price: itemPrice, 
+                    quantity: (quantity || 1), 
+                    selectedSize, 
+                    selectedColor,
+                    isWholesale 
+                }];
             }
         });
     };
