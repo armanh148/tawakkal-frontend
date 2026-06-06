@@ -1,239 +1,154 @@
-import { useState, useEffect } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
-import { fetchTikTokReels } from '../api';
+import { useState, useEffect, useRef } from 'react';
+import { fetchSiteSettings, fetchTikTokReels } from '../api';
 
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
+// ── Fallback: reel cards from database ───────────────────────────────────────
+const ReelCard = ({ reel }) => {
+  const thumb = reel.cover_image || reel.cover_image_url;
 
-const staticReelsData = [
-  {
-    id: 1,
-    videoImg: '/unstitched.jpg',
-    thumbImg: '/unstitched.jpg',
-    category: 'UNSTITCHED',
-    title: 'TRADITIONAL EMBROIDERY',
-    price: 'PKR 6,990',
-    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
-  },
-  {
-    id: 2,
-    videoImg: '/ready to wear.webp',
-    thumbImg: '/ready to wear.webp',
-    category: 'RTW',
-    title: 'CASUAL KURTA',
-    price: 'PKR 4,590',
-    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
-  },
-  {
-    id: 3,
-    videoImg: '/Luxe edition.webp',
-    thumbImg: '/Luxe edition.webp',
-    category: 'LUXE',
-    title: 'FESTIVE COLLECTION',
-    price: 'PKR 15,990',
-    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
-  },
-  {
-    id: 4,
-    videoImg: '/spring-summer-1.png',
-    thumbImg: '/spring-summer-1.png',
-    category: 'SS26',
-    title: 'FLORAL PRINT',
-    price: 'PKR 5,490',
-    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
-  },
-  {
-    id: 5,
-    videoImg: '/spring-summer-2.png',
-    thumbImg: '/spring-summer-2.png',
-    category: 'SS26',
-    title: 'PASTEL ELEGANCE',
-    price: 'PKR 5,890',
-    tiktokUrl: 'https://www.tiktok.com/@tawakkalstudio'
-  }
-];
+  return (
+    <a
+      href={reel.video_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px] overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+      style={{ aspectRatio: '9/16' }}
+    >
+      {/* Thumbnail */}
+      {thumb ? (
+        <img
+          src={thumb}
+          alt={reel.title || 'TikTok Reel'}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+          <svg className="w-12 h-12 text-white/30" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.42a8.16 8.16 0 004.77 1.52V7.5a4.85 4.85 0 01-1-.81z"/>
+          </svg>
+        </div>
+      )}
 
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+      {/* Play button */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/40">
+          <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* TikTok icon top-right */}
+      <div className="absolute top-3 right-3">
+        <svg className="w-5 h-5 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.42a8.16 8.16 0 004.77 1.52V7.5a4.85 4.85 0 01-1-.81z"/>
+        </svg>
+      </div>
+
+      {/* Title at bottom */}
+      {reel.title && (
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <p className="text-white text-[11px] leading-tight line-clamp-2 font-medium drop-shadow">
+            {reel.title}
+          </p>
+        </div>
+      )}
+    </a>
+  );
+};
+
+const ReelsFromDB = ({ reels }) => (
+  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide justify-start md:justify-center">
+    {reels.map((reel) => (
+      <ReelCard key={reel.id} reel={reel} />
+    ))}
+  </div>
+);
+
+// ── Embed widget (Elfsight / EmbedSocial / etc.) ──────────────────────────────
+const EmbedWidget = ({ code }) => {
+  useEffect(() => {
+    // Parse script tags from embed code string
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(code, 'text/html');
+    doc.querySelectorAll('script').forEach((el) => {
+      if (el.src) {
+        const existing = document.querySelector(`script[src="${el.src}"]`);
+        if (!existing) {
+          const s = document.createElement('script');
+          s.src = el.src;
+          s.async = true;
+          document.body.appendChild(s);
+        } else {
+          // Script already loaded — tell Elfsight to re-scan the DOM
+          window.eapps?.platform?.start?.();
+        }
+      } else if (el.textContent.trim()) {
+        const s = document.createElement('script');
+        s.textContent = el.textContent;
+        document.body.appendChild(s);
+      }
+    });
+  }, [code]);
+
+  // Strip <script> tags before rendering — they won't execute via innerHTML anyway
+  const html = code.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+};
+
+// ── Main component ────────────────────────────────────────────────────────────
 const ReelsGallery = () => {
-  const [reels, setReels] = useState(staticReelsData);
+  const [embedCode, setEmbedCode] = useState(null);
+  const [reels, setReels] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadReels = async () => {
-      try {
-        const dynamicReels = await fetchTikTokReels();
-        if (dynamicReels && dynamicReels.length > 0) {
-          // Map backend data to frontend format
-          const formattedReels = dynamicReels.map(reel => ({
-            id: reel.id,
-            videoImg: reel.cover_image_url,
-            thumbImg: reel.cover_image_url,
-            category: reel.category || 'REEL',
-            title: reel.title || 'LATEST COLLECTION',
-            price: reel.price || '',
-            tiktokUrl: reel.video_url
-          }));
-          setReels(formattedReels);
-        }
-      } catch (error) {
-        console.error('Error fetching TikTok reels:', error);
-      }
-    };
-    loadReels();
+    Promise.all([fetchSiteSettings(), fetchTikTokReels()])
+      .then(([settings, reelData]) => {
+        setEmbedCode(settings?.tiktok_embed_code || null);
+        setReels(reelData || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  // Nothing to show
+  if (!loading && !embedCode && reels.length === 0) return null;
 
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="max-w-[95%] mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        
-        {/* Section Title */}
+
         <div className="text-center mb-10 md:mb-16">
           <h2 className="text-lg md:text-xl lg:text-2xl font-semibold tracking-[0.2em] text-charcoal uppercase">
-            TRADITION IN MOTION
+            Tradition in Motion
           </h2>
-          <p className="text-xs text-charcoal/60 mt-2 tracking-widest uppercase font-light italic">Follow us on TikTok @tawakkalstudio</p>
+          <p className="text-xs text-charcoal/60 mt-2 tracking-widest uppercase font-light italic">
+            Follow us on TikTok @tawakkalstudio
+          </p>
         </div>
 
-        {/* Reels Slider */}
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={12}
-          slidesPerView={2}
-          navigation={true}
-          pagination={{ clickable: true }}
-          autoplay={{
-            delay: 3500,
-            disableOnInteraction: false,
-          }}
-          breakpoints={{
-            320: {
-              slidesPerView: 2,
-              spaceBetween: 10,
-            },
-            640: {
-              slidesPerView: 2,
-              spaceBetween: 12,
-            },
-            768: {
-              slidesPerView: 3,
-              spaceBetween: 16,
-            },
-            1024: {
-              slidesPerView: 4,
-              spaceBetween: 20,
-            },
-            1280: {
-              slidesPerView: 5,
-              spaceBetween: 24,
-            },
-          }}
-          className="reels-slider"
-        >
-          {reels.map((reel) => (
-            <SwiperSlide key={reel.id}>
-              <a href={reel.tiktokUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-[9/16] rounded-lg md:rounded-xl overflow-hidden group cursor-pointer">
-                {/* Background Video/Image */}
-                <img 
-                  src={reel.videoImg} 
-                  alt={reel.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/10 to-transparent opacity-90"></div>
-
-                {/* Product Info Bar */}
-                <div className="absolute bottom-2 left-2 right-2 md:bottom-4 md:left-4 md:right-4 bg-white/20 backdrop-blur-md rounded md:rounded-lg p-1.5 md:p-2 flex items-center gap-2 md:gap-3 border border-white/10 transition-transform duration-300 group-hover:-translate-y-1">
-                  
-                  {/* Thumbnail */}
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded overflow-hidden flex-shrink-0 bg-white">
-                    <img 
-                      src={reel.thumbImg} 
-                      alt="Thumbnail" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  {/* Text Details */}
-                  <div className="flex flex-col justify-center text-white min-w-0">
-                    <h4 className="text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-0.5 truncate">
-                      {reel.category} | {reel.title}
-                    </h4>
-                    <div className="flex items-center gap-1 md:gap-2 text-[9px] md:text-[10px]">
-                      {reel.oldPrice && (
-                        <span className="text-white/50 line-through text-[8px] md:text-[9px]">{reel.oldPrice}</span>
-                      )}
-                      <span className="font-extrabold">{reel.price}</span>
-                    </div>
-                  </div>
-
-                </div>
-              </a>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {loading ? (
+          // Skeleton placeholders
+          <div className="flex gap-4 justify-center">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px] rounded-2xl bg-gray-100 animate-pulse"
+                style={{ aspectRatio: '9/16' }}
+              />
+            ))}
+          </div>
+        ) : embedCode ? (
+          <EmbedWidget code={embedCode} />
+        ) : (
+          <ReelsFromDB reels={reels} />
+        )}
 
       </div>
-
-      {/* Custom Swiper Styles */}
-      <style>{`
-        .reels-slider .swiper-button-next,
-        .reels-slider .swiper-button-prev {
-          width: 36px;
-          height: 36px;
-          background: white;
-          border-radius: 50%;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-          color: #1a1a1a;
-          transition: all 0.3s ease;
-        }
-        
-        .reels-slider .swiper-button-next:hover,
-        .reels-slider .swiper-button-prev:hover {
-          background: #e6a13b;
-          color: white;
-          transform: scale(1.1);
-        }
-        
-        .reels-slider .swiper-button-next::after,
-        .reels-slider .swiper-button-prev::after {
-          font-size: 12px;
-          font-weight: bold;
-        }
-        
-        .reels-slider .swiper-pagination {
-          position: relative;
-          margin-top: 16px;
-        }
-        
-        .reels-slider .swiper-pagination-bullet {
-          width: 8px;
-          height: 8px;
-          background: #d1d5db;
-          opacity: 1;
-          transition: all 0.3s ease;
-        }
-        
-        .reels-slider .swiper-pagination-bullet-active {
-          background: #e6a13b;
-          width: 24px;
-          border-radius: 4px;
-        }
-
-        @media (max-width: 640px) {
-          .reels-slider .swiper-button-next,
-          .reels-slider .swiper-button-prev {
-            width: 28px;
-            height: 28px;
-          }
-          
-          .reels-slider .swiper-button-next::after,
-          .reels-slider .swiper-button-prev::after {
-            font-size: 10px;
-          }
-        }
-      `}</style>
     </section>
   );
 };
