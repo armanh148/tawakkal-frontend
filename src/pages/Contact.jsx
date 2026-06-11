@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, ChevronDown } from 'lucide-react';
+import { fetchSiteSettings } from '../api';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Contact = () => {
+  const [settings, setSettings] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,6 +33,16 @@ const Contact = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    const loadSettings = async () => {
+      try {
+        const data = await fetchSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Error fetching site settings for contact page:", err);
+      }
+    };
+    loadSettings();
     
     gsap.fromTo(formRef.current, 
       { y: 60, opacity: 0 },
@@ -79,6 +91,12 @@ const Contact = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isSubjectOpen]);
 
+  const whatsappNumber = settings?.whatsapp_number?.replace(/\D/g, '') || '923007600883';
+  const displayWhatsApp = settings?.whatsapp_number || '+92 300 7600883';
+  const displayPhone = settings?.contact_phone || '0323-0000883';
+  const displayEmail = settings?.contact_email || 'info@tawakkalstudio.com';
+  const displayAddress = settings?.address || 'Karachi, Pakistan';
+
   return (
     <div className="bg-ivory min-h-screen text-charcoal">
       {/* Hero Banner */}
@@ -107,21 +125,45 @@ const Contact = () => {
         <div className="max-w-[1440px] mx-auto">
           {/* Mobile: 2 per row | Desktop: 4 columns */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-            {[
-              { icon: Phone, title: "Phone", line1: "0300-7904231", line2: "0323-0000883" },
-              { icon: Mail, title: "Email", line1: "mianusmanjee09@gmail.com", line2: "support@tawakkal.com" },
-              { icon: MapPin, title: "Address", line1: "Opposite GC University", line2: "Kotwali Road, Faisalabad" },
-              { icon: Clock, title: "Working Hours", line1: "Mon - Sat: 10AM - 8PM", line2: "Sunday: Closed" }
-            ].map((item, index) => (
-              <div key={index} className="bg-white p-4 md:p-8 shadow-lg border-t-2 border-gold text-center group hover:shadow-xl transition-all">
-                <div className="w-10 h-10 md:w-16 md:h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-6 group-hover:bg-gold/20 transition-colors">
-                  <item.icon className="w-4 h-4 md:w-7 md:h-7 text-gold" />
-                </div>
-                <h3 className="font-bold text-xs md:text-lg mb-1 md:mb-3 tracking-tight">{item.title}</h3>
-                <p className="text-gray-600 text-[10px] md:text-sm leading-tight">{item.line1}</p>
-                <p className="text-gray-600 text-[10px] md:text-sm leading-tight">{item.line2}</p>
+            {/* Phone Card */}
+            <div className="bg-white p-4 md:p-8 shadow-lg border-t-2 border-gold text-center group hover:shadow-xl transition-all">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-6 group-hover:bg-gold/20 transition-colors">
+                <Phone className="w-4 h-4 md:w-7 md:h-7 text-gold" />
               </div>
-            ))}
+              <h3 className="font-bold text-xs md:text-lg mb-1 md:mb-3 tracking-tight">Call/Message</h3>
+              <a href={`tel:${displayPhone}`} className="text-gray-600 text-[10px] md:text-sm leading-tight block hover:text-gold transition-colors">Phone: {displayPhone}</a>
+              <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="text-gray-600 text-[10px] md:text-sm leading-tight block hover:text-gold transition-colors">WhatsApp: {displayWhatsApp}</a>
+            </div>
+
+            {/* Email Card */}
+            <div className="bg-white p-4 md:p-8 shadow-lg border-t-2 border-gold text-center group hover:shadow-xl transition-all">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-6 group-hover:bg-gold/20 transition-colors">
+                <Mail className="w-4 h-4 md:w-7 md:h-7 text-gold" />
+              </div>
+              <h3 className="font-bold text-xs md:text-lg mb-1 md:mb-3 tracking-tight">Email</h3>
+              <a href={`mailto:${displayEmail}`} className="text-gray-600 text-[10px] md:text-sm leading-tight block hover:text-gold transition-colors">{displayEmail}</a>
+              <p className="text-gray-600 text-[10px] md:text-sm leading-tight">support@tawakkal.com</p>
+            </div>
+
+            {/* Address Card */}
+            <div className="bg-white p-4 md:p-8 shadow-lg border-t-2 border-gold text-center group hover:shadow-xl transition-all">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-6 group-hover:bg-gold/20 transition-colors">
+                <MapPin className="w-4 h-4 md:w-7 md:h-7 text-gold" />
+              </div>
+              <h3 className="font-bold text-xs md:text-lg mb-1 md:mb-3 tracking-tight">Address</h3>
+              <p className="text-gray-600 text-[10px] md:text-sm leading-tight">{displayAddress}</p>
+              <p className="text-gray-600 text-[10px] md:text-sm leading-tight">Opposite GC University, Faisalabad</p>
+            </div>
+
+            {/* Hours Card */}
+            <div className="bg-white p-4 md:p-8 shadow-lg border-t-2 border-gold text-center group hover:shadow-xl transition-all">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-6 group-hover:bg-gold/20 transition-colors">
+                <Clock className="w-4 h-4 md:w-7 md:h-7 text-gold" />
+              </div>
+              <h3 className="font-bold text-xs md:text-lg mb-1 md:mb-3 tracking-tight">Working Hours</h3>
+              <p className="text-gray-600 text-[10px] md:text-sm leading-tight">Mon - Sat: 10AM - 8PM</p>
+              <p className="text-gray-600 text-[10px] md:text-sm leading-tight">Sunday: Closed</p>
+            </div>
           </div>
         </div>
       </section>
@@ -273,7 +315,7 @@ const Contact = () => {
                   Need quick assistance? Reach out to us on WhatsApp for instant support regarding orders, products, or any inquiries.
                 </p>
                 <a 
-                  href="https://wa.me/03230000883" 
+                  href={`https://wa.me/${whatsappNumber}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 text-[11px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors"

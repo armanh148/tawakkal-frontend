@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Sparkles, Award, Heart } from 'lucide-react';
+import { fetchSiteSettings } from '../api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,8 +29,19 @@ const stories = [
 
 const OurStory = ({ id }) => {
   const containerRef = useRef(null);
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await fetchSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Error fetching site settings:", err);
+      }
+    };
+    loadSettings();
+
     const ctx = gsap.context(() => {
       gsap.from('.story-header', {
         y: 30,
@@ -110,7 +122,7 @@ const OurStory = ({ id }) => {
               {/* Main Image Container */}
               <div className="relative h-full rounded-xl lg:rounded-2xl overflow-hidden shadow-2xl group">
                 <img
-                  src="/public/about-section.png"
+                  src={settings?.about_story_image || "/about-section.png"}
                   alt="Artisan at work"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />

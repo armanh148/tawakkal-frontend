@@ -1,4 +1,5 @@
-
+import { useEffect, useState } from 'react';
+import { fetchSiteSettings } from '../api';
 
 const SocialIcons = {
   Facebook: () => (
@@ -19,6 +20,20 @@ const SocialIcons = {
 };
 
 const Footer = ({ id }) => {
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await fetchSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Error fetching site settings for footer:", err);
+      }
+    };
+    loadSettings();
+  }, []);
+
   return (
     <footer id={id} className="bg-charcoal text-white pt-16 md:pt-24 pb-4 border-t border-gold/20">
       <div className="max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,17 +43,29 @@ const Footer = ({ id }) => {
           <div className="lg:w-[20%] gap-4">
             <h3 className="text-[14px] uppercase tracking-[0.2em] font-extrabold text-white mb-6">GET IN TOUCH</h3>
             <div className="space-y-2 text-xs text-white/60">
-              <div className="flex flex-col space-y-0">
-                <span className="text-white uppercase text-[12px] tracking-wider opacity-40">WhatsApp</span>
-                <p className="text-gray-300 uppercase text-[12px] tracking-wider font-light">+92 3XX XXXXXXX</p>
+              <div className="flex flex-col space-y-1">
+                <span className="text-white uppercase text-[12px] tracking-wider opacity-40">Phone</span>
+                <a 
+                  href={`tel:${settings?.contact_phone || '0323-0000883'}`} 
+                  className="text-gray-300 uppercase text-[12px] tracking-wider font-light hover:text-gold transition-colors"
+                >
+                  {settings?.contact_phone || '0323-0000883'}
+                </a>
               </div>
               <div className="flex flex-col space-y-1">
                 <span className="text-white uppercase text-[12px] tracking-wider opacity-40">Email</span>
-                <p className="text-gray-300 uppercase text-[12px] tracking-wider font-light">info@tawakkalstudio.com</p>
+                <a 
+                  href={`mailto:${settings?.contact_email || 'info@tawakkalstudio.com'}`} 
+                  className="text-gray-300 uppercase text-[12px] tracking-wider font-light hover:text-gold transition-colors"
+                >
+                  {settings?.contact_email || 'info@tawakkalstudio.com'}
+                </a>
               </div>
               <div className="flex flex-col space-y-1">
                 <span className="text-white uppercase text-[12px] tracking-wider opacity-40">Address</span>
-                <p className="text-gray-300 uppercase text-[12px] tracking-wider font-light">Karachi, Pakistan</p>
+                <p className="text-gray-300 uppercase text-[12px] tracking-wider font-light">
+                  {settings?.address || 'Karachi, Pakistan'}
+                </p>
               </div>
             </div>
           </div>

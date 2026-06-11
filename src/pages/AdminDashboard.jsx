@@ -11,7 +11,8 @@ import {
 import { 
   fetchDashboardStats, fetchOrders, fetchProducts, 
   fetchMessages, fetchHeroBanners, createProduct, updateProduct, deleteProduct, fetchCategories,
-  fetchSiteSettings, updateSiteSettings, deleteCategory, createCategory, updateCategory 
+  fetchSiteSettings, updateSiteSettings, deleteCategory, createCategory, updateCategory,
+  fetchColors, fetchSizes
 } from '../api';
 import BannerForm from '../components/BannerForm';
 

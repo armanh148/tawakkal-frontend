@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from "./CartContext.jsx";
 import { useNavigate } from 'react-router-dom';
-import { createOrder } from '../api';
+import { createOrder, fetchSiteSettings } from '../api';
 import { useCurrency } from '../context/CurrencyContext';
 import { Check, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -11,6 +11,10 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  
+  const [shippingFee, setShippingFee] = useState(250);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(5000);
+  const [taxPercent, setTaxPercent] = useState(0);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -29,6 +33,22 @@ const Checkout = () => {
     }
   }, [cartItems, navigate, orderComplete]);
 
+  useEffect(() => {
+    const getSettings = async () => {
+      try {
+        const settings = await fetchSiteSettings();
+        if (settings) {
+          setShippingFee(Number(settings.shipping_fee) || 0);
+          setFreeShippingThreshold(Number(settings.free_shipping_threshold) || 0);
+          setTaxPercent(Number(settings.tax_percent) || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching site settings", err);
+      }
+    };
+    getSettings();
+  }, []);
+
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
       const price = parseFloat(item.price.replace(/[^0-9.-]+/g, ""));
@@ -37,8 +57,9 @@ const Checkout = () => {
   };
 
   const subtotal = calculateSubtotal();
-  const shipping = subtotal > 5000 ? 0 : 250;
-  const total = subtotal + shipping;
+  const tax = (subtotal * taxPercent) / 100;
+  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingFee;
+  const total = subtotal + tax + shipping;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -195,9 +216,15 @@ const Checkout = () => {
                   <span className="text-gray-400 font-bold uppercase tracking-widest">Subtotal</span>
                   <span className="font-bold">PKR {subtotal.toLocaleString()}</span>
                 </div>
+                {taxPercent > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400 font-bold uppercase tracking-widest">Tax ({taxPercent}%)</span>
+                    <span className="font-bold">PKR {tax.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400 font-bold uppercase tracking-widest">Shipping</span>
-                  <span className="font-bold">{shipping === 0 ? 'FREE' : `PKR ${shipping}`}</span>
+                  <span className="font-bold">{shipping === 0 ? 'FREE' : `PKR ${shipping.toLocaleString()}`}</span>
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                   <span className="text-lg font-black uppercase tracking-[0.2em]">Total</span>

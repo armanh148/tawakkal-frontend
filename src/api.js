@@ -16,6 +16,16 @@ export const fetchCategories = async () => {
   return response.data;
 };
 
+export const fetchColors = async () => {
+  const response = await api.get('/colors/');
+  return response.data;
+};
+
+export const fetchSizes = async () => {
+  const response = await api.get('/sizes/');
+  return response.data;
+};
+
 export const createCategory = async (categoryData) => {
   const response = await api.post('/categories/', categoryData, {
     headers: { 'Content-Type': 'multipart/form-data' }

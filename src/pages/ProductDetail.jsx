@@ -6,15 +6,6 @@ import { useCart } from './CartContext.jsx';
 import { fetchProductDetail, fetchProducts } from '../api';
 import { useCurrency } from '../context/CurrencyContext';
 
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const colors = [
-  { name: 'Black', hex: '#1a1a1a' },
-  { name: 'Navy', hex: '#1e3a5f' },
-  { name: 'Maroon', hex: '#800000' },
-  { name: 'Beige', hex: '#d4c4b0' },
-  { name: 'White', hex: '#f5f5f5' },
-];
-
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -22,8 +13,8 @@ const ProductDetail = () => {
   const { convertPrice } = useCurrency();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [selectedSize, setSelectedSize] = useState('M');
-  const [selectedColor, setSelectedColor] = useState(colors[0]);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [wholesaleQuantity, setWholesaleQuantity] = useState(6);
   const [activeImage, setActiveImage] = useState(0);
@@ -42,6 +33,17 @@ const ProductDetail = () => {
         const data = await fetchProductDetail(id);
         setProduct(data);
         setWholesaleQuantity(data.wholesale_package_size || 6);
+
+        // Initialize selected variants from backend data
+        if (data.available_sizes && data.available_sizes.length > 0) {
+          setSelectedSize(data.available_sizes[0].name);
+        }
+        if (data.available_colors && data.available_colors.length > 0) {
+          setSelectedColor({
+            name: data.available_colors[0].name,
+            hex: data.available_colors[0].hex_code || '#000000'
+          });
+        }
 
         // Fetch related products
         const products = await fetchProducts({ category: data.category });
@@ -73,7 +75,7 @@ const ProductDetail = () => {
 
   const handleExpressCheckout = () => {
     addToCart(product, quantity, selectedSize, selectedColor);
-    navigate('/cart');
+    navigate('/checkout');
   };
 
   const handleWholesaleAddToCart = () => {
@@ -95,7 +97,9 @@ const ProductDetail = () => {
     );
   }
 
-  const productImages = [product.image, product.image, product.image, product.image];
+  const productImages = product.gallery && product.gallery.length > 0 
+    ? [product.image, ...product.gallery.map(img => img.image)]
+    : [product.image, product.image, product.image, product.image];
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] text-charcoal pt-24 pb-20">
@@ -217,46 +221,50 @@ const ProductDetail = () => {
             </div>
 
             {/* Color Selection */}
-            <div className="space-y-4 product-anim-up">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] uppercase tracking-[0.2em] font-bold">Select Color</p>
-                <span className="text-[11px] font-bold text-gold">{selectedColor.name}</span>
+            {product.available_colors && product.available_colors.length > 0 && (
+              <div className="space-y-4 product-anim-up">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] uppercase tracking-[0.2em] font-bold">Select Color</p>
+                  <span className="text-[11px] font-bold text-gold">{selectedColor?.name}</span>
+                </div>
+                <div className="flex gap-4">
+                  {product.available_colors.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setSelectedColor({ name: color.name, hex: color.hex_code || '#000000' })}
+                      className={`w-10 h-10 rounded-full border-2 p-1 transition-all duration-300 ${selectedColor?.name === color.name ? 'border-gold scale-110 shadow-lg' : 'border-transparent'
+                        }`}
+                    >
+                      <div className="w-full h-full rounded-full shadow-inner" style={{ backgroundColor: color.hex_code || '#000000' }} />
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-4">
-                {colors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color)}
-                    className={`w-10 h-10 rounded-full border-2 p-1 transition-all duration-300 ${selectedColor.name === color.name ? 'border-gold scale-110 shadow-lg' : 'border-transparent'
-                      }`}
-                  >
-                    <div className="w-full h-full rounded-full shadow-inner" style={{ backgroundColor: color.hex }} />
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Size Selection */}
-            <div className="space-y-4 product-anim-up">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] uppercase tracking-[0.2em] font-bold">Select Size</p>
-                <button className="text-[10px] uppercase tracking-widest font-bold text-gold hover:underline">Size Guide</button>
+            {product.available_sizes && product.available_sizes.length > 0 && (
+              <div className="space-y-4 product-anim-up">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] uppercase tracking-[0.2em] font-bold">Select Size</p>
+                  <button className="text-[10px] uppercase tracking-widest font-bold text-gold hover:underline">Size Guide</button>
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {product.available_sizes.map((size) => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.name)}
+                      className={`h-12 rounded-xl font-bold text-xs transition-all duration-300 ${selectedSize === size.name
+                          ? 'bg-charcoal text-white shadow-xl scale-105'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-charcoal'
+                        }`}
+                    >
+                      {size.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-6 gap-2">
-                {sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`h-12 rounded-xl font-bold text-xs transition-all duration-300 ${selectedSize === size
-                        ? 'bg-charcoal text-white shadow-xl scale-105'
-                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-charcoal'
-                      }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Quantity & Action */}
             <div className="space-y-4 pt-4 product-anim-up">

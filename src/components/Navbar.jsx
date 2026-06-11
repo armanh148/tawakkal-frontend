@@ -3,7 +3,7 @@ import { ShoppingBag, Menu, X, Search, Heart, User, Globe } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useCart } from '../pages/CartContext';
-import { fetchCategories } from '../api';
+import { fetchCategories, fetchSiteSettings } from '../api';
 import { useCurrency, currencies } from '../context/CurrencyContext';
 
 const Navbar = () => {
@@ -15,6 +15,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [settings, setSettings] = useState(null);
   const closeTimeout = useRef(null);
   
   const navigate = useNavigate();
@@ -30,15 +31,30 @@ const Navbar = () => {
     };
     window.addEventListener('scroll', handleScroll);
     
-    const loadCategories = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchCategories();
-        setCategories(data.filter(cat => cat.is_published));
+        const [catData, settingsData] = await Promise.all([
+          fetchCategories(),
+          fetchSiteSettings()
+        ]);
+        setCategories(catData.filter(cat => cat.is_published));
+        setSettings(settingsData);
+        
+        // Update Favicon if provided
+        if (settingsData?.favicon) {
+          let link = document.querySelector("link[rel~='icon']");
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+          }
+          link.href = settingsData.favicon;
+        }
       } catch (err) {
-        console.error("Error fetching categories for navbar:", err);
+        console.error("Error fetching data for navbar:", err);
       }
     };
-    loadCategories();
+    loadData();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -78,7 +94,7 @@ const Navbar = () => {
           <div className="flex-shrink-0 flex items-center">
             <Link to="/">
               <img 
-                src={scrolled ? "/tawakkal-second-logo.png" : "/tawakkal-logo.png"} 
+                src={scrolled || isDarkHeroPage ? (settings?.secondary_logo || "/tawakkal-second-logo.png") : (settings?.logo || "/tawakkal-logo.png")} 
                 alt="Tawakkal Logo" 
                 className="h-8 w-auto object-contain transition-all duration-300" 
               />

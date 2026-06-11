@@ -1,7 +1,28 @@
+import { useEffect, useState } from 'react';
+import { fetchSiteSettings } from '../api';
+
 const WhatsAppButton = () => {
+  const [whatsappNumber, setWhatsappNumber] = useState('923216667140');
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await fetchSiteSettings();
+        if (settings?.whatsapp_number) {
+          // Remove non-numeric characters for the wa.me link
+          const cleanNumber = settings.whatsapp_number.replace(/\D/g, '');
+          setWhatsappNumber(cleanNumber);
+        }
+      } catch (err) {
+        console.error("Error fetching WhatsApp number:", err);
+      }
+    };
+    loadSettings();
+  }, []);
+
   return (
     <a 
-      href="https://wa.me/923216667140" 
+      href={`https://wa.me/${whatsappNumber}`} 
       target="_blank" 
       rel="noopener noreferrer"
       className="fixed bottom-10 right-10 z-[60] bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-300 flex items-center justify-center"
